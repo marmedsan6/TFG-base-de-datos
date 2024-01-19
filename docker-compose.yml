@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  db-mysql:
+    image: mysql:8.3.0-oracle
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DATABASE_NAME}
+      MYSQL_USER: ${DATABASE_USER}
+      MYSQL_PASSWORD: ${DATABASE_PASSWORD}
+    ports:
+      - 3306:3306
+    volumes:
+      - ./db-volume:/var/lib/mysql
