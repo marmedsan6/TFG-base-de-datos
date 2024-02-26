@@ -13,3 +13,30 @@ services:
       - 3306:3306
     volumes:
       - ./db-volume:/var/lib/mysql
+    networks:
+      dev_network:
+        ipv4_address: 10.4.0.6
+  backend:
+    image: python:3.12-rc-bookworm
+    command: sh -c "cd /temp && pip install -r requirements.txt && cd /home/backend && tail -f /dev/null"
+    restart: always
+    environment:
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      SECRET_KEY: ${SECRET_KEY}
+    volumes:
+      - ./backend:/home/backend/
+      - .:/temp
+    ports:
+      - "8000:8000"
+    networks:
+      dev_network:
+        ipv4_address: 10.4.0.7
+
+networks:
+  dev_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.4.0.0/16

@@ -1,0 +1,1 @@
+Hacer pip freeze cada vez que hago pip install y copiar el resultado a requirements.txt
