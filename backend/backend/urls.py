@@ -23,7 +23,7 @@ from django.views.generic import RedirectView
 urlpatterns = [
     path('', RedirectView.as_view(url='/schema/swagger-ui/', permanent=True)),
     path('admin/', admin.site.urls),
-    path('plantas/', InfoPlantas.as_view({'get': 'obtener_info_plantas'}), name='plantas'),
+    path('plantas/', InfoPlantas.as_view({'post': 'obtener_info_plantas'}), name='plantas'),
 
     # Swagger
     path('schema/', SpectacularAPIView.as_view(), name='schema'),
