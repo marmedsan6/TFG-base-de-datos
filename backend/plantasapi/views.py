@@ -31,12 +31,11 @@ class InfoPlantas(viewsets.ViewSet):
             try:
                 q = "Abies alba"
                 
-                species_list_url = f'https://trefle.io/api/v1/plants/search?token={api_key}&q={q}' #En vez de q iría nombre
-                species_list = requests.get(species_list_url).json()
+                species_list_url = f'https://trefle.io/api/v1/plants/search?token={api_key}&q={nombre}' 
+                species_endpoint = requests.get(species_list_url).json()
 
-                plant_id = species_list['data'][0]['links']['self'] #Lo unico que puede fallar por sintaxis
+                plant_id = species_endpoint['data'][0]['links']['self'] 
                 plant_details_url = f'https://trefle.io/{plant_id}?token={api_key}'
-                
 
                 response = requests.get(plant_details_url)
 
@@ -44,7 +43,7 @@ class InfoPlantas(viewsets.ViewSet):
                 plant_data = response.json()
                 print(plant_data)
 
-                #plantas_datos.append(plant_data)
+                plantas_datos.append(plant_data['data'])
                 
                 
             except requests.exceptions.RequestException as e:
@@ -60,7 +59,6 @@ class InfoPlantas(viewsets.ViewSet):
         
         plant_data = client.identify_plant(image_base64=base64Img)
             
-            # Extraer el nombre científico
         if plant_data and 'result' in plant_data.keys() and 'classification' in plant_data['result'].keys() and 'suggestions' in plant_data['result']['classification'].keys():
             
             suggestions = plant_data['result']['classification']['suggestions'][0:3]
