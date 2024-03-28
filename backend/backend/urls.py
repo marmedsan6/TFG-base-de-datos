@@ -16,14 +16,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from plantasapi.views import InfoPlantas
+from plantasapi.views import InfoPlantas, IniciarSesion
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from django.views.generic import RedirectView
+from backend.scheme import KnoxTokenScheme # NO BORRAR, AUNQUE NO SE USE SINO SE PONE NO APARECE LA AUTENTICACIÓN EN EL SWAGGER
 
 urlpatterns = [
     path('', RedirectView.as_view(url='/schema/swagger-ui/', permanent=True)),
     path('admin/', admin.site.urls),
     path('plantas/', InfoPlantas.as_view({'post': 'obtener_info_plantas'}), name='plantas'),
+    path('login/', IniciarSesion.as_view({'post': 'login'}), name = 'login'),
 
     # Swagger
     path('schema/', SpectacularAPIView.as_view(), name='schema'),

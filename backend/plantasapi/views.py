@@ -6,10 +6,16 @@ from rest_framework import status
 import requests
 from rest_framework import viewsets
 from drf_spectacular.utils import extend_schema
-from plantasapi.serializers import ImageSerializer, PlantaSerializer
+from plantasapi.serializers import ImageSerializer, LoginSerializer, PlantaSerializer, TokenSerializer
 from .plant_id import PlantID
+from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth import authenticate
+from knox.models import AuthToken
+from django.contrib.auth.models import User
+from django.contrib.auth.hashers import make_password
 
 class InfoPlantas(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
 
     @extend_schema(
         description='Obtienes tus datos de plantas',
@@ -68,11 +74,34 @@ class InfoPlantas(viewsets.ViewSet):
         else:
             raise requests.exceptions.RequestException("No se ha encontrado la planta")
 
+class IniciarSesion(viewsets.ViewSet):        
+# login
+    @extend_schema(
+        description='Login',
+        request=LoginSerializer,
+        responses={200: TokenSerializer},
+        methods=['POST']
+    )
+    def login(self, request):
+        print(make_password('test'))
+        cuenta_data = request.data
+        try:
+            user = authenticate(username=cuenta_data["username"], password=cuenta_data["password"])
+            if user is not None:
+                return Response({"token":  'Token ' + AuthToken.objects.create(user=user)[1]}, content_type='application/json', status=200)
+            else:
+                raise requests.exceptions.RequestException("No se ha encontrado el usuario")
+        except User.DoesNotExist:
+            raise requests.exceptions.RequestException("No se ha encontrado el usuario")
+        
+    def register(self, request):
+        usuario_data = request.data
+        
+        cuenta = usuario_data["id"]
+        cuenta["email"] = usuario_data["email"]
+        usuario_data["id_cuenta"] = IniciarSesion.setCuentaDefaultValues(cuenta)
+        usuario_data["id_cuenta"].full_clean()
+        usuario_data["id_cuenta"].save()
 
-
-            
-        #A obtener_info_plantas tengo que pasarle la foto en base64 del frontend
-
-        #Llamar a la API de reconocimiento de reconocimiento de plantas
-
-        #A partir de la respuesta de la API sacar el nombre cientifico
+        usuario_data["identificador_datos_pago"]["identificador"] = None
+        usuario_data["identificador_datos_pago"]["nombre_completo"] = usuario_data["id_cuenta"].first_name + " " + socio_data["id_cuenta"].last_name

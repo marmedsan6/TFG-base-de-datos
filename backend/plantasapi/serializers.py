@@ -4,6 +4,7 @@ from rest_framework import serializers
 from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_field
 from drf_spectacular.types import OpenApiTypes
+from django.contrib.auth.models import User
 
 class HistorialSerializer(serializers.ModelSerializer):
     info_planta = serializers.SerializerMethodField() #Con esto no hace falta crear get_info_planta en otra clase
@@ -57,3 +58,16 @@ class PlantaSerializer(serializers.Serializer):
         image_data = obj.get('default_image', {})
         return image_data.get('original_url', None)
     
+
+class TokenSerializer(serializers.ModelSerializer):
+    token = serializers.CharField()
+    class Meta:
+        model = User
+        fields = ['token']
+
+class LoginSerializer(serializers.ModelSerializer):
+    username = serializers.CharField()
+    password = serializers.CharField()
+    class Meta:
+        model = User
+        fields = ['username', 'password']

@@ -1,1 +1,7 @@
 Hacer pip freeze cada vez que hago pip install y copiar el resultado a requirements.txt
+
+Crear las tablas:
+Paso 1: Crear los archivos de definición de tablas 
+-python manage.py makemigrations
+Paso 2: Crear las tablas en la bbdd a partir de la definición
+-python manage.py migrate
