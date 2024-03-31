@@ -26,6 +26,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('plantas/', InfoPlantas.as_view({'post': 'obtener_info_plantas'}), name='plantas'),
     path('login/', IniciarSesion.as_view({'post': 'login'}), name = 'login'),
+    path('register/', IniciarSesion.as_view({'post': 'register'}), name = 'register'),
 
     # Swagger
     path('schema/', SpectacularAPIView.as_view(), name='schema'),

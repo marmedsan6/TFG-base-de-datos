@@ -1,4 +1,5 @@
 import time
+from django.http import JsonResponse
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -6,7 +7,7 @@ from rest_framework import status
 import requests
 from rest_framework import viewsets
 from drf_spectacular.utils import extend_schema
-from plantasapi.serializers import ImageSerializer, LoginSerializer, PlantaSerializer, TokenSerializer
+from plantasapi.serializers import ImageSerializer, LoginSerializer, PlantaSerializer, TokenSerializer, RegisterSerializer
 from .plant_id import PlantID
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import authenticate
@@ -93,15 +94,23 @@ class IniciarSesion(viewsets.ViewSet):
                 raise requests.exceptions.RequestException("No se ha encontrado el usuario")
         except User.DoesNotExist:
             raise requests.exceptions.RequestException("No se ha encontrado el usuario")
-        
-    def register(self, request):
-        usuario_data = request.data
-        
-        cuenta = usuario_data["id"]
-        cuenta["email"] = usuario_data["email"]
-        usuario_data["id_cuenta"] = IniciarSesion.setCuentaDefaultValues(cuenta)
-        usuario_data["id_cuenta"].full_clean()
-        usuario_data["id_cuenta"].save()
 
-        usuario_data["identificador_datos_pago"]["identificador"] = None
-        usuario_data["identificador_datos_pago"]["nombre_completo"] = usuario_data["id_cuenta"].first_name + " " + socio_data["id_cuenta"].last_name
+    @extend_schema(
+        description='Crea una cuenta',
+        request=RegisterSerializer,
+        responses={201: TokenSerializer},
+        methods=['POST']
+    )    
+
+    def register(self, request):
+        cuenta_data = request.data
+    
+        cuenta_data["is_staff"] = False
+        cuenta_data["is_superuser"] = False
+        cuenta_data["is_active"] = True
+        cuenta_data["password"] = make_password(cuenta_data["password"])
+
+        cuenta: User = User(**cuenta_data)
+        cuenta.full_clean()
+        cuenta.save()
+        return JsonResponse({"message": "Usuario registrado exitosamente"}, content_type='application/json', status=201)
