@@ -7,10 +7,9 @@ from drf_spectacular.types import OpenApiTypes
 from django.contrib.auth.models import User
 
 class HistorialSerializer(serializers.ModelSerializer):
-    info_planta = serializers.SerializerMethodField() #Con esto no hace falta crear get_info_planta en otra clase
     class Meta:
         model = Historial
-        fields = ['id', 'fecha', 'usuario', 'nombre_cientifico_planta', 'url_foto']
+        fields = ['fecha', 'nombre_cientifico_planta', 'url_foto']
 
 #class WateringGeneralBenchmarkSerializer(serializers.Serializer):
 #    value = serializers.CharField(max_length=100, allow_null=True)
@@ -76,3 +75,8 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username', 'password', 'email']
+
+
+class BuscarNombreCientifico(serializers.Serializer):
+    nombreCientifico = serializers.CharField()
+    fotoURL = serializers.CharField()

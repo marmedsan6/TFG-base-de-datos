@@ -16,19 +16,27 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from plantasapi.views import InfoPlantas, IniciarSesion
+from plantasapi.views import HistorialPlantas, InfoPlantas, IniciarSesion
+from plantasapi.mocks.mocked_views import InfoPlantasMocked
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from django.views.generic import RedirectView
 from backend.scheme import KnoxTokenScheme # NO BORRAR, AUNQUE NO SE USE SINO SE PONE NO APARECE LA AUTENTICACIÓN EN EL SWAGGER
+from django.conf import settings
 
 urlpatterns = [
     path('', RedirectView.as_view(url='/schema/swagger-ui/', permanent=True)),
     path('admin/', admin.site.urls),
-    path('plantas/', InfoPlantas.as_view({'post': 'obtener_info_plantas'}), name='plantas'),
     path('login/', IniciarSesion.as_view({'post': 'login'}), name = 'login'),
     path('register/', IniciarSesion.as_view({'post': 'register'}), name = 'register'),
+    path('agregarPlanta/', HistorialPlantas.as_view({'post': 'agregarPlanta'}), name = 'agregarPlanta'),
+    path('extraerHistorial/', HistorialPlantas.as_view({'get': 'extraerHistorial'}), name = 'extraerHistorial'),
 
     # Swagger
     path('schema/', SpectacularAPIView.as_view(), name='schema'),
     path('schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui')
 ]
+
+if settings.MOCKED:
+    urlpatterns.append(path('plantas/', InfoPlantasMocked.as_view({'post': 'obtener_info_plantas'}), name='plantas'))
+else:
+    urlpatterns.append(path('plantas/', InfoPlantas.as_view({'post': 'obtener_info_plantas'}), name='plantas'))

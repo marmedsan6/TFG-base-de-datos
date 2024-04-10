@@ -1,19 +1,18 @@
-import time
 from django.http import JsonResponse
-from django.shortcuts import render
-from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 import requests
 from rest_framework import viewsets
 from drf_spectacular.utils import extend_schema
-from plantasapi.serializers import ImageSerializer, LoginSerializer, PlantaSerializer, TokenSerializer, RegisterSerializer
+from plantasapi.models import Historial
+from plantasapi.serializers import HistorialSerializer, ImageSerializer, LoginSerializer, PlantaSerializer, TokenSerializer, RegisterSerializer, BuscarNombreCientifico
 from .plant_id import PlantID
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import authenticate
 from knox.models import AuthToken
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
+from django.utils import timezone
 
 class InfoPlantas(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
@@ -36,7 +35,6 @@ class InfoPlantas(viewsets.ViewSet):
 
         for nombre in nombre_plantas:
             try:
-                q = "Abies alba"
                 
                 species_list_url = f'https://trefle.io/api/v1/plants/search?token={api_key}&q={nombre}' 
                 species_endpoint = requests.get(species_list_url).json()
@@ -114,3 +112,43 @@ class IniciarSesion(viewsets.ViewSet):
         cuenta.full_clean()
         cuenta.save()
         return JsonResponse({"message": "Usuario registrado exitosamente"}, content_type='application/json', status=201)
+    
+
+class HistorialPlantas(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        description='Añadir planta a historial',
+        request= BuscarNombreCientifico,
+        responses={200: None},
+        methods=['POST']
+    )
+
+    def agregarPlanta(self, request):
+        nombreCientifico = request.data.get('nombreCientifico') 
+        usuario = request.user
+        fotoURL = request.data.get('fotoURL')
+
+        datos_historial = {
+        'nombre_cientifico_planta': nombreCientifico,
+        'fecha': timezone.now(),
+        'usuario': usuario,
+        'url_foto': fotoURL
+    }
+
+        registro_historial = Historial(**datos_historial)
+
+        registro_historial.full_clean()
+        registro_historial.save()
+        return JsonResponse({"message": "Planta registrada"}, status=201)
+
+    @extend_schema(
+        description='Extraer los datos del historial',
+        responses={200: PlantaSerializer(many=True)},
+        methods=['GET']
+    )
+
+    def extraerHistorial(self, request):
+        user=request.user
+        plantas = list(Historial.objects.filter(usuario_id=user))
+        return JsonResponse(HistorialSerializer(plantas, many=True).data, content_type='application/json', safe=False)
