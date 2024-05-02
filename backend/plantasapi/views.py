@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django.http import JsonResponse
 from rest_framework.response import Response
 from rest_framework import status
@@ -5,7 +6,7 @@ import requests
 from rest_framework import viewsets
 from drf_spectacular.utils import extend_schema
 from plantasapi.models import Historial
-from plantasapi.serializers import HistorialSerializer, ImageSerializer, LoginSerializer, PlantaSerializer, TokenSerializer, RegisterSerializer, BuscarNombreCientifico
+from plantasapi.serializers import HistorialSerializer, IdSerializer, ImageSerializer, LoginSerializer, PlantaSerializer, TokenSerializer, RegisterSerializer, BuscarNombreCientifico
 from .plant_id import PlantID
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import authenticate
@@ -19,7 +20,7 @@ class InfoPlantas(viewsets.ViewSet):
 
     @extend_schema(
         description='Obtienes tus datos de plantas',
-        request = ImageSerializer,
+        request = ImageSerializer, 
         responses={200: PlantaSerializer(many=True)}
     )
     def obtener_info_plantas(self, request, *args, **kwargs):
@@ -58,7 +59,7 @@ class InfoPlantas(viewsets.ViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def identificar_planta(self, base64Img):
-        api_key = 'uT96MaWiW3soVsf2AONBpZoK07pgL6MdfkSriyhAZSKgSLEfMk'  
+        api_key = 'WfXhxzf2wYI5CIalVI2Are6R8HvfewXB4rZ8kGliSUwJfNhJiK'  
 
         client = PlantID(api_key=api_key)
         
@@ -128,12 +129,14 @@ class HistorialPlantas(viewsets.ViewSet):
         nombreCientifico = request.data.get('nombreCientifico') 
         usuario = request.user
         fotoURL = request.data.get('fotoURL')
+        frecuenciaRiego = request.data.get('frecuenciaRiego')
 
         datos_historial = {
         'nombre_cientifico_planta': nombreCientifico,
         'fecha': timezone.now(),
         'usuario': usuario,
-        'url_foto': fotoURL
+        'url_foto': fotoURL,
+        'frecuenciaRiego': frecuenciaRiego
     }
 
         registro_historial = Historial(**datos_historial)
@@ -144,7 +147,7 @@ class HistorialPlantas(viewsets.ViewSet):
 
     @extend_schema(
         description='Extraer los datos del historial',
-        responses={200: PlantaSerializer(many=True)},
+        responses={200: HistorialSerializer(many=True)},
         methods=['GET']
     )
 
@@ -152,3 +155,22 @@ class HistorialPlantas(viewsets.ViewSet):
         user=request.user
         plantas = list(Historial.objects.filter(usuario_id=user))
         return JsonResponse(HistorialSerializer(plantas, many=True).data, content_type='application/json', safe=False)
+        
+    @extend_schema(
+        description='Indicar que una planta ha sido regada y actualizar la próxima fecha de riego',
+        request= IdSerializer,
+        responses={200: HistorialSerializer},
+        methods=['POST']
+    )
+
+    def plantaRegada(self, request): 
+        planta_id = request.data.get('id')
+        usuario = request.user
+
+        try:
+            planta = Historial.objects.get(pk=planta_id, usuario=usuario)
+            planta.fecha_riego = timezone.now() + timedelta(days=planta.frecuenciaRiego)
+            planta.save()
+            return Response(HistorialSerializer(planta).data, status=status.HTTP_200_OK)
+        except Historial.DoesNotExist:
+            return Response({'error': 'Planta no encontrada en el historial'}, status=status.HTTP_404_NOT_FOUND)

@@ -30,6 +30,9 @@ urlpatterns = [
     path('register/', IniciarSesion.as_view({'post': 'register'}), name = 'register'),
     path('agregarPlanta/', HistorialPlantas.as_view({'post': 'agregarPlanta'}), name = 'agregarPlanta'),
     path('extraerHistorial/', HistorialPlantas.as_view({'get': 'extraerHistorial'}), name = 'extraerHistorial'),
+    path('plantaRegada/', HistorialPlantas.as_view({'post': 'plantaRegada'}), name = 'plantaRegada'),
+
+
 
     # Swagger
     path('schema/', SpectacularAPIView.as_view(), name='schema'),

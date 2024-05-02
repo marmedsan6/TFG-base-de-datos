@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 class HistorialSerializer(serializers.ModelSerializer):
     class Meta:
         model = Historial
-        fields = ['fecha', 'nombre_cientifico_planta', 'url_foto']
+        fields = '__all__'
 
 #class WateringGeneralBenchmarkSerializer(serializers.Serializer):
 #    value = serializers.CharField(max_length=100, allow_null=True)
@@ -80,3 +80,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 class BuscarNombreCientifico(serializers.Serializer):
     nombreCientifico = serializers.CharField()
     fotoURL = serializers.CharField()
+    frecuenciaRiego = serializers.IntegerField()
+
+class IdSerializer(serializers.Serializer):
+    id = serializers.IntegerField()

@@ -6,3 +6,5 @@ class Historial(models.Model):
     usuario = models.ForeignKey(User, null=False, on_delete=models.PROTECT)
     nombre_cientifico_planta = models.CharField(max_length = 100)
     url_foto = models.CharField(max_length = 255)
+    frecuenciaRiego = models.PositiveIntegerField(default=0) #Frecuencia de riego en días
+    fecha_riego = models.DateTimeField()
