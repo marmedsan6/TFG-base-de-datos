@@ -130,13 +130,17 @@ class HistorialPlantas(viewsets.ViewSet):
         usuario = request.user
         fotoURL = request.data.get('fotoURL')
         frecuenciaRiego = request.data.get('frecuenciaRiego')
+        frecuenciaPulverizacion = request.data.get('frecuenciaPulverizacion')
+        frecuenciaFertilizacion = request.data.get('frecuenciaFertilizacion')
 
         datos_historial = {
         'nombre_cientifico_planta': nombreCientifico,
         'fecha': timezone.now(),
         'usuario': usuario,
         'url_foto': fotoURL,
-        'frecuenciaRiego': frecuenciaRiego
+        'frecuenciaRiego': frecuenciaRiego,
+        'frecuenciaPulverizacion': frecuenciaPulverizacion,
+        'frecuenciaFertilizacion': frecuenciaFertilizacion
     }
 
         registro_historial = Historial(**datos_historial)
@@ -174,3 +178,44 @@ class HistorialPlantas(viewsets.ViewSet):
             return Response(HistorialSerializer(planta).data, status=status.HTTP_200_OK)
         except Historial.DoesNotExist:
             return Response({'error': 'Planta no encontrada en el historial'}, status=status.HTTP_404_NOT_FOUND)
+        
+
+    @extend_schema(
+        description='Indicar que una planta ha sido pulverizada y actualizar la próxima fecha de pulverizacion',
+        request= IdSerializer,
+        responses={200: HistorialSerializer},
+        methods=['POST']
+    )
+
+    def plantaPulverizada(self, request): 
+        planta_id = request.data.get('id')
+        usuario = request.user
+
+        try:
+            planta = Historial.objects.get(pk=planta_id, usuario=usuario)
+            planta.fecha_pulverizacion = timezone.now() + timedelta(days=planta.frecuenciaPulverizacion)
+            planta.save()
+            return Response(HistorialSerializer(planta).data, status=status.HTTP_200_OK)
+        except Historial.DoesNotExist:
+            return Response({'error': 'Planta no encontrada en el historial'}, status=status.HTTP_404_NOT_FOUND)
+        
+
+    @extend_schema(
+        description='Indicar que una planta ha sido fertilizada y actualizar la próxima fecha de fertilizacion',
+        request= IdSerializer,
+        responses={200: HistorialSerializer},
+        methods=['POST']
+    )
+
+    def plantaFertilizada(self, request): 
+        planta_id = request.data.get('id')
+        usuario = request.user
+
+        try:
+            planta = Historial.objects.get(pk=planta_id, usuario=usuario)
+            planta.fecha_fertilizacion = timezone.now() + timedelta(days=planta.frecuenciaFertilizacion)
+            planta.save()
+            return Response(HistorialSerializer(planta).data, status=status.HTTP_200_OK)
+        except Historial.DoesNotExist:
+            return Response({'error': 'Planta no encontrada en el historial'}, status=status.HTTP_404_NOT_FOUND)
+        

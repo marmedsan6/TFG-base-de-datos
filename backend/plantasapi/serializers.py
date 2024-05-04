@@ -81,6 +81,8 @@ class BuscarNombreCientifico(serializers.Serializer):
     nombreCientifico = serializers.CharField()
     fotoURL = serializers.CharField()
     frecuenciaRiego = serializers.IntegerField()
+    frecuenciaPulverizacion = serializers.IntegerField()
+    frecuenciaFertilizacion = serializers.IntegerField()
 
 class IdSerializer(serializers.Serializer):
     id = serializers.IntegerField()

@@ -31,7 +31,8 @@ urlpatterns = [
     path('agregarPlanta/', HistorialPlantas.as_view({'post': 'agregarPlanta'}), name = 'agregarPlanta'),
     path('extraerHistorial/', HistorialPlantas.as_view({'get': 'extraerHistorial'}), name = 'extraerHistorial'),
     path('plantaRegada/', HistorialPlantas.as_view({'post': 'plantaRegada'}), name = 'plantaRegada'),
-
+    path('plantaPulverizada/', HistorialPlantas.as_view({'post': 'plantaPulverizada'}), name = 'plantaPulverizada'),
+    path('plantaFertilizada/', HistorialPlantas.as_view({'post': 'plantaFertilizada'}), name = 'plantaFertilizada'),
 
 
     # Swagger

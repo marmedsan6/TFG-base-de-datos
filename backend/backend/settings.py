@@ -31,7 +31,7 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = True
 
 # Cambiar a False cuando se quiera usar la api de verdad, en caso contrario devolverá una misma planta siempre y no la identificará
-MOCKED = False
+MOCKED = True
 
 ALLOWED_HOSTS = ['*']
 
