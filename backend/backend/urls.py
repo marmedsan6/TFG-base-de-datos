@@ -29,11 +29,12 @@ urlpatterns = [
     path('login/', IniciarSesion.as_view({'post': 'login'}), name = 'login'),
     path('register/', IniciarSesion.as_view({'post': 'register'}), name = 'register'),
     path('agregarPlanta/', HistorialPlantas.as_view({'post': 'agregarPlanta'}), name = 'agregarPlanta'),
+    path('obtenerConfigUsuario/<int:id_planta_usuario>', HistorialPlantas.as_view({'get': 'obtenerConfigUsuario'}), name = 'obtenerConfigUsuario'),
     path('extraerHistorial/', HistorialPlantas.as_view({'get': 'extraerHistorial'}), name = 'extraerHistorial'),
-    path('plantaRegada/', HistorialPlantas.as_view({'post': 'plantaRegada'}), name = 'plantaRegada'),
-    path('plantaPulverizada/', HistorialPlantas.as_view({'post': 'plantaPulverizada'}), name = 'plantaPulverizada'),
-    path('plantaFertilizada/', HistorialPlantas.as_view({'post': 'plantaFertilizada'}), name = 'plantaFertilizada'),
-
+    path('plantaRegada/<int:id_planta_usuario>', HistorialPlantas.as_view({'post': 'plantaRegada'}), name = 'plantaRegada'),
+    path('plantaPulverizada/<int:id_planta_usuario>', HistorialPlantas.as_view({'post': 'plantaPulverizada'}), name = 'plantaPulverizada'),
+    path('plantaFertilizada/<int:id_planta_usuario>', HistorialPlantas.as_view({'post': 'plantaFertilizada'}), name = 'plantaFertilizada'),
+    path('editarPlantaUsuario/<int:id_planta_usuario>', HistorialPlantas.as_view({'put': 'editarPlantaUsuario'}), name = 'editarPlantaUsuario'),
 
     # Swagger
     path('schema/', SpectacularAPIView.as_view(), name='schema'),

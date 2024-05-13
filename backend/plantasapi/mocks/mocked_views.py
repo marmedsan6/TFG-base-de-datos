@@ -15,48 +15,31 @@ class InfoPlantasMocked(viewsets.ViewSet):
     )
     def obtener_info_plantas(self, request, *args, **kwargs):
         return Response([
-                    {
-                        "common_name": "Shirley poppy",
-                        "duration": None,
-                        "edible": False,
-                        "family": "Papaveraceae",
-                        "flower": {
-                            "color": None
-                        },
-                        "growth": {
-                            "light": 8,
-                            "ph_maximum": 7.5,
-                            "ph_minimum": 7
-                        },
-                        "id": 127170,
-                        "image_url": "https://bs.plantnet.org/image/o/401c147ff21437f2cc7a1629ca7afafdd07e1eeb",
-                        "scientific_name": "Papaver rhoeas",
-                        "specifications": {
-                            "growth_form": None,
-                            "growth_habit": "Forb/herb",
-                            "growth_rate": None
-                        }
-                    },
-                    {
-                        "common_name": "Long-head poppy",
-                        "duration": None,
-                        "edible": False,
-                        "family": "Papaveraceae",
-                        "flower": {
-                            "color": None
-                        },
-                        "growth": {
-                            "light": 8,
-                            "ph_maximum": 5.5,
-                            "ph_minimum": 5
-                        },
-                        "id": 127060,
-                        "image_url": "https://bs.plantnet.org/image/o/bbe185dbe68d149fc35ea0775628e688553ca104",
-                        "scientific_name": "Papaver dubium",
-                        "specifications": {
-                            "growth_form": None,
-                            "growth_habit": "Forb/herb",
-                            "growth_rate": None
-                        }
-                    }
-                ], status=status.HTTP_200_OK)
+  {
+    "id": 1,
+    "common_name": "Olive",
+    "scientific_name": "Olea europaea",
+    "image_url": "https://bs.plantnet.org/image/o/de82f7f1a82590515b6c24c36fb52c0c745751d6",
+    "ph_maximum": 7,
+    "ph_minimum": 6.5,
+    "light": 8
+  },
+  {
+    "id": 2,
+    "common_name": "Cork oak",
+    "scientific_name": "Quercus suber",
+    "image_url": "https://bs.plantnet.org/image/o/18d98dce42b463a97cca4e642ab61aecce8c74f6",
+    "ph_maximum": 5.5,
+    "ph_minimum": 5,
+    "light": 8
+  },
+  {
+    "id": 8,
+    "common_name": "Hardee peppertree",
+    "scientific_name": "Schinus polygama",
+    "image_url": "https://bs.plantnet.org/image/o/3cd99f0c5725e24b529b97064e0cc44473a8d9da",
+    "ph_maximum": None,
+    "ph_minimum": None,
+    "light": None
+  }
+], status=status.HTTP_200_OK)

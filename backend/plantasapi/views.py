@@ -5,8 +5,8 @@ from rest_framework import status
 import requests
 from rest_framework import viewsets
 from drf_spectacular.utils import extend_schema
-from plantasapi.models import Historial
-from plantasapi.serializers import HistorialSerializer, IdSerializer, ImageSerializer, LoginSerializer, PlantaSerializer, TokenSerializer, RegisterSerializer, BuscarNombreCientifico
+from plantasapi.models import Historial, PlantInfo, ConfigurarPlantaUsuario
+from plantasapi.serializers import BuscarPorNombreCientifico, ConfigPlantaUsuario, HistorialSerializer, IdConfig, IdSerializer, ImageSerializer, LoginSerializer, ModificarFrecuenciaSerializer, PlantaSerializer, TokenSerializer, RegisterSerializer, BuscarNombreCientifico
 from .plant_id import PlantID
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import authenticate
@@ -34,24 +34,32 @@ class InfoPlantas(viewsets.ViewSet):
         api_key = '3-kiaGeQ4pf2MNHc5kS44oKjw2HFW-Ys5_O8GlC-Jt8'
         plantas_datos = []
 
-        for nombre in nombre_plantas:
+        for planta in nombre_plantas:
             try:
-                
-                species_list_url = f'https://trefle.io/api/v1/plants/search?token={api_key}&q={nombre}' 
-                species_endpoint = requests.get(species_list_url).json()
+                plant_info = PlantInfo.objects.filter(scientific_name=planta).first()
+                if plant_info:
+                    plantas_datos.append(plant_info)
+                else:
+                    species_list_url = f'https://trefle.io/api/v1/plants/search?token={api_key}&q={planta}' 
+                    species_endpoint = requests.get(species_list_url).json()
 
-                plant_id = species_endpoint['data'][0]['links']['self'] 
-                plant_details_url = f'https://trefle.io/{plant_id}?token={api_key}'
+                    plant_id = species_endpoint['data'][0]['id']
+                    plant_details_url = f'https://trefle.io/api/v1/plants/{plant_id}?token={api_key}'
 
-                response = requests.get(plant_details_url)
+                    response = requests.get(plant_details_url)
+                    response.raise_for_status()
+                    plant_data = response.json()['data']
 
-                response.raise_for_status()
-                plant_data = response.json()
-                print(plant_data)
-
-                plantas_datos.append(plant_data['data'])
-                
-                
+                    plant_info = PlantInfo(
+                        scientific_name=plant_data['scientific_name'],
+                        common_name=plant_data['common_name'],
+                        light=plant_data['main_species']['growth']['light'],
+                        ph_minimum=plant_data['main_species']['growth']['ph_minimum'],
+                        ph_maximum=plant_data['main_species']['growth']['ph_maximum'],
+                        image_url=plant_data['image_url']
+                    )
+                    plant_info.save()
+                    plantas_datos.append(plant_info)
             except requests.exceptions.RequestException as e:
                 return Response({'error': str(e), 'content': str(e.response.content)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
@@ -90,9 +98,9 @@ class IniciarSesion(viewsets.ViewSet):
             if user is not None:
                 return Response({"token":  'Token ' + AuthToken.objects.create(user=user)[1]}, content_type='application/json', status=200)
             else:
-                raise requests.exceptions.RequestException("No se ha encontrado el usuario")
+                return Response({"Error": "No se ha encontrado el usuario"}, content_type='application/json', status=404)
         except User.DoesNotExist:
-            raise requests.exceptions.RequestException("No se ha encontrado el usuario")
+            return Response({"Error": "No se ha encontrado el usuario"}, content_type='application/json', status=404)
 
     @extend_schema(
         description='Crea una cuenta',
@@ -120,34 +128,48 @@ class HistorialPlantas(viewsets.ViewSet):
 
     @extend_schema(
         description='Añadir planta a historial',
-        request= BuscarNombreCientifico,
-        responses={200: None},
+        request= BuscarPorNombreCientifico,
+        responses={200: IdConfig},
         methods=['POST']
     )
 
     def agregarPlanta(self, request):
-        nombreCientifico = request.data.get('nombreCientifico') 
         usuario = request.user
-        fotoURL = request.data.get('fotoURL')
-        frecuenciaRiego = request.data.get('frecuenciaRiego')
-        frecuenciaPulverizacion = request.data.get('frecuenciaPulverizacion')
-        frecuenciaFertilizacion = request.data.get('frecuenciaFertilizacion')
+        scientific_name = request.data.get('scientific_name')
+        
+        planta = PlantInfo.objects.filter(scientific_name=scientific_name).first()
 
-        datos_historial = {
-        'nombre_cientifico_planta': nombreCientifico,
-        'fecha': timezone.now(),
-        'usuario': usuario,
-        'url_foto': fotoURL,
-        'frecuenciaRiego': frecuenciaRiego,
-        'frecuenciaPulverizacion': frecuenciaPulverizacion,
-        'frecuenciaFertilizacion': frecuenciaFertilizacion
-    }
+        configuracion_planta_usuario = ConfigurarPlantaUsuario(planta=planta)
 
-        registro_historial = Historial(**datos_historial)
+        configuracion_planta_usuario.save()
 
-        registro_historial.full_clean()
-        registro_historial.save()
-        return JsonResponse({"message": "Planta registrada"}, status=201)
+        id_config = configuracion_planta_usuario.id
+
+        historial = Historial(usuario=usuario, planta_usuario=configuracion_planta_usuario)
+
+        historial.save()
+
+        return JsonResponse({"message": "Planta registrada", "id_planta_usuario": id_config}, status=201)
+        #registro_historial = Historial(**datos_historial)
+
+        #registro_historial.full_clean()
+        #registro_historial.save()
+        #return JsonResponse({"message": "Planta registrada"}, status=201)
+
+    @extend_schema(
+        description='Obtener la configuracion de la planta del usuario',
+        responses={200: ConfigPlantaUsuario},
+        methods=['GET']
+    )
+
+    def obtenerConfigUsuario(self, request, id_planta_usuario):
+        #id_config = request.data.get('id_planta_usuario')
+
+        configuracion_planta_usuario = ConfigurarPlantaUsuario.objects.get(id=id_planta_usuario)
+
+        serializer = ConfigPlantaUsuario(configuracion_planta_usuario)
+        
+        return Response(serializer.data)
 
     @extend_schema(
         description='Extraer los datos del historial',
@@ -162,60 +184,58 @@ class HistorialPlantas(viewsets.ViewSet):
         
     @extend_schema(
         description='Indicar que una planta ha sido regada y actualizar la próxima fecha de riego',
-        request= IdSerializer,
-        responses={200: HistorialSerializer},
+        responses={200: ConfigPlantaUsuario},
         methods=['POST']
     )
 
-    def plantaRegada(self, request): 
-        planta_id = request.data.get('id')
-        usuario = request.user
-
-        try:
-            planta = Historial.objects.get(pk=planta_id, usuario=usuario)
-            planta.fecha_riego = timezone.now() + timedelta(days=planta.frecuenciaRiego)
-            planta.save()
-            return Response(HistorialSerializer(planta).data, status=status.HTTP_200_OK)
-        except Historial.DoesNotExist:
-            return Response({'error': 'Planta no encontrada en el historial'}, status=status.HTTP_404_NOT_FOUND)
+    def plantaRegada(self, request, id_planta_usuario): 
+        planta = ConfigurarPlantaUsuario.objects.get(id=id_planta_usuario)
+        planta.fecha_riego = timezone.now() + timedelta(days=planta.frecuenciaRiego)
+        planta.save()
+        return Response(ConfigPlantaUsuario(planta).data, status=status.HTTP_200_OK)
         
 
     @extend_schema(
         description='Indicar que una planta ha sido pulverizada y actualizar la próxima fecha de pulverizacion',
-        request= IdSerializer,
         responses={200: HistorialSerializer},
         methods=['POST']
     )
 
-    def plantaPulverizada(self, request): 
-        planta_id = request.data.get('id')
-        usuario = request.user
-
-        try:
-            planta = Historial.objects.get(pk=planta_id, usuario=usuario)
-            planta.fecha_pulverizacion = timezone.now() + timedelta(days=planta.frecuenciaPulverizacion)
-            planta.save()
-            return Response(HistorialSerializer(planta).data, status=status.HTTP_200_OK)
-        except Historial.DoesNotExist:
-            return Response({'error': 'Planta no encontrada en el historial'}, status=status.HTTP_404_NOT_FOUND)
-        
+    def plantaPulverizada(self, request, id_planta_usuario): 
+        planta = ConfigurarPlantaUsuario.objects.get(id=id_planta_usuario)
+        planta.fecha_pulverizacion = timezone.now() + timedelta(days=planta.frecuenciaPulverizacion)
+        planta.save()
+        return Response(ConfigPlantaUsuario(planta).data, status=status.HTTP_200_OK)
 
     @extend_schema(
         description='Indicar que una planta ha sido fertilizada y actualizar la próxima fecha de fertilizacion',
-        request= IdSerializer,
         responses={200: HistorialSerializer},
         methods=['POST']
     )
 
-    def plantaFertilizada(self, request): 
-        planta_id = request.data.get('id')
-        usuario = request.user
-
-        try:
-            planta = Historial.objects.get(pk=planta_id, usuario=usuario)
-            planta.fecha_fertilizacion = timezone.now() + timedelta(days=planta.frecuenciaFertilizacion)
-            planta.save()
-            return Response(HistorialSerializer(planta).data, status=status.HTTP_200_OK)
-        except Historial.DoesNotExist:
-            return Response({'error': 'Planta no encontrada en el historial'}, status=status.HTTP_404_NOT_FOUND)
+    def plantaFertilizada(self, request, id_planta_usuario): 
+        planta = ConfigurarPlantaUsuario.objects.get(id=id_planta_usuario)
+        planta.fecha_fertilizacion = timezone.now() + timedelta(days=planta.frecuenciaFertilizacion)
+        planta.save()
+        return Response(ConfigPlantaUsuario(planta).data, status=status.HTTP_200_OK)
         
+    @extend_schema(
+        description='Modificar la frecuencia de riego, pulverización y fertilización de la planta del usuario',
+        request=ModificarFrecuenciaSerializer,
+        responses={200: ConfigPlantaUsuario},
+        methods=['PUT']
+    )
+    def editarPlantaUsuario(self, request, id_planta_usuario):
+        configuracion_planta_usuario = ConfigurarPlantaUsuario.objects.get(id=id_planta_usuario)
+
+        if 'frecuenciaRiego' in request.data:
+                configuracion_planta_usuario.frecuenciaRiego = request.data['frecuenciaRiego']
+        if 'frecuenciaPulverizacion' in request.data:
+                configuracion_planta_usuario.frecuenciaPulverizacion = request.data['frecuenciaPulverizacion']
+        if 'frecuenciaFertilizacion' in request.data:
+                configuracion_planta_usuario.frecuenciaFertilizacion = request.data['frecuenciaFertilizacion']
+
+        configuracion_planta_usuario.save()
+
+        serializer = ConfigPlantaUsuario(configuracion_planta_usuario)
+        return Response(serializer.data, status=status.HTTP_200_OK)
