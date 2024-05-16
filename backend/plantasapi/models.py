@@ -3,12 +3,12 @@ from django.contrib.auth.models import User
 
 class PlantInfo(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
-    scientific_name = models.CharField(max_length=255)
-    common_name = models.CharField(max_length=255)
+    scientific_name = models.CharField(max_length=255, null=False)
+    common_name = models.CharField(max_length=255, default="Desconocido", null=True, blank=True)
     light = models.CharField(max_length=255, null=True, blank=True)
     ph_minimum = models.FloatField(null=True)
     ph_maximum = models.FloatField(null=True)
-    image_url = models.CharField(max_length = 255)
+    image_url = models.CharField(max_length = 255, default="https://upload.wikimedia.org/wikipedia/commons/a/a3/Image-not-found.png", null=True, blank=True)
 
 class ConfigurarPlantaUsuario(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
@@ -26,3 +26,4 @@ class Historial(models.Model):
     usuario = models.ForeignKey(User, null=False, on_delete=models.PROTECT)
     planta_usuario = models.ForeignKey(ConfigurarPlantaUsuario, on_delete=models.CASCADE)
     fecha = models.DateTimeField(auto_now_add=True)
+    

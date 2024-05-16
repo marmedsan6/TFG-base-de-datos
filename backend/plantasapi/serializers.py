@@ -6,10 +6,7 @@ from drf_spectacular.utils import extend_schema_field
 from drf_spectacular.types import OpenApiTypes
 from django.contrib.auth.models import User
 
-class HistorialSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Historial
-        fields = '__all__'
+
 
 #class WateringGeneralBenchmarkSerializer(serializers.Serializer):
 #    value = serializers.CharField(max_length=100, allow_null=True)
@@ -35,6 +32,7 @@ class PlantaSerializer(serializers.Serializer):
     #def get_scientific_name(self, obj):
     #    return obj.get('scientific_name', [None])[0] #Para obtener el elemento 0 de la lista scientific_name
     
+
 
 class TokenSerializer(serializers.ModelSerializer):
     token = serializers.CharField()
@@ -74,6 +72,13 @@ class ConfigPlantaUsuario(serializers.ModelSerializer):
 
     class Meta:
         model = ConfigurarPlantaUsuario
+        fields = '__all__'
+
+class HistorialSerializer(serializers.ModelSerializer):
+    planta_usuario = ConfigPlantaUsuario()
+
+    class Meta:
+        model = Historial
         fields = '__all__'
 
 class ModificarFrecuenciaSerializer(serializers.Serializer):
